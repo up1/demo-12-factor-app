@@ -1,5 +1,2 @@
-export DATABASE_HOST=localhost
-export DATABASE_NAME=demo
-export DATABASE_USER=user
-export DATABASE_PASSWORD=password
+export DATABASE_URL=mysql+mysqlconnector://user:password@localhost/demo
 python api.py

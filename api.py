@@ -1,39 +1,21 @@
 from flask import Flask
-import pymysql.cursors
+from flask_sqlalchemy import SQLAlchemy
 import json
 import os
 
-DATABASE_CONFIGURATION = {
-   'host': os.environ['DATABASE_HOST'],
-   'user': os.environ['DATABASE_USER'],
-   'password': os.environ['DATABASE_PASSWORD'],
-   'db': os.environ['DATABASE_NAME']
-}
-
-def execute_sql(query):
-   connection = None
-   try:
-       connection = pymysql.connect(**DATABASE_CONFIGURATION)
-       cursor = connection.cursor()
-       cursor.execute(query)
-       return cursor.fetchall()
-   except pymysql.Error:
-       print("Error %d: %s" % (e.args[0], e.args[1]))
-       return None
-   finally:
-       if connection:
-           connection.close()
-
-def list_user():
-   all_users = execute_sql("SELECT * FROM USER") or []
-   return [{"id": user_id, "username": username} for (user_id, username) in all_users]
-
-
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
+db = SQLAlchemy(app)
+
+class User(db.Model):
+   __tablename__ = 'USER'
+   id = db.Column(db.Integer, primary_key=True)
+   name = db.Column(db.String(100))
 
 @app.route("/user")
 def list_all_user():
-   return json.dumps(list_user())
+   to_json = lambda user: {"id": user.id, "username": user.name}
+   return json.dumps([to_json(user) for user in User.query.all()])
 
 if __name__ == "__main__":
    app.run(host='0.0.0.0', port=8000)
