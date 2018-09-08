@@ -1,21 +1,19 @@
 from flask import Flask
 import pymysql.cursors
 import json
+import os
 
-app = Flask(__name__)
-
-def list_user():
-   all_users = execute_sql("SELECT * FROM USER") or []
-   return [{"id": user_id, "username": username} for (user_id, username) in all_users]
-
+DATABASE_CONFIGURATION = {
+   'host': os.environ['DATABASE_HOST'],
+   'user': os.environ['DATABASE_USER'],
+   'password': os.environ['DATABASE_PASSWORD'],
+   'db': os.environ['DATABASE_NAME']
+}
 
 def execute_sql(query):
    connection = None
    try:
-       connection = pymysql.connect(host='localhost', 
-                               user='user', 
-                               password='password', 
-                               db='demo')
+       connection = pymysql.connect(**DATABASE_CONFIGURATION)
        cursor = connection.cursor()
        cursor.execute(query)
        return cursor.fetchall()
@@ -25,6 +23,13 @@ def execute_sql(query):
    finally:
        if connection:
            connection.close()
+
+def list_user():
+   all_users = execute_sql("SELECT * FROM USER") or []
+   return [{"id": user_id, "username": username} for (user_id, username) in all_users]
+
+
+app = Flask(__name__)
 
 @app.route("/user")
 def list_all_user():
